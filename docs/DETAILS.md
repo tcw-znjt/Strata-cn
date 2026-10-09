@@ -1083,7 +1083,6 @@ without penalties, so more of its guesses are now rejected. Requests without pen
 
 ---
 
-<<<<<<< Updated upstream
 ### The Responses API and Codex CLI
 
 `POST /v1/responses` (0.1.39, #451) speaks OpenAI's newer Responses API, which Codex CLI uses (it no longer
@@ -1158,7 +1157,7 @@ one that would not fit the context with the kept tools. Off by default: the prom
 one the client sent. The author measured, with Codex CLI 0.160.0 and an engine that only counts the shared prompt start,
 that a compaction after an 85,000-token conversation reused 84,895 of its 84,997 tokens and read 102; without it, 41 of
 80,683.
-=======
+
 ## The web app's languages
 
 The page ships both languages in one file, `serve/web/i18n.js`, loaded before `app.js` from the same origin: no fetch,
@@ -1177,8 +1176,8 @@ so keep them:
 - the two blocks sit between the comment markers `--- en ---`, `--- zh ---` and `--- end ---`
 - both blocks hold exactly the same set of keys (the test asserts it, and asserts a floor on the count so a
   mis-marked block cannot pass as empty)
-- keys are lowercase letters, digits, `.` and `_`, grouped by area (`tab.*`, `pill.*`, `mon.*`, `req.*`, `about.*`,
-  `drawer.*`, `chat.*`, `tool.*`, `meta.*`, `toast.*`, `mcp.*`, `export.*`)
+- keys are lowercase letters, digits, `.` and `_`, grouped by area (`tab.*`, `pill.*`, `mon.*`, `cc.*`, `req.*`,
+  `cfg.*`, `about.*`, `drawer.*`, `chat.*`, `tool.*`, `meta.*`, `toast.*`, `mcp.*`, `export.*`, `mt.*`)
 
 Sentences are whole templates with `{placeholders}`, never fragments joined in JavaScript - Chinese word order differs,
 and fragment-by-fragment translation produces broken sentences. Plurals are a `_one` / `_other` pair (`tn("meta.tools", 2)`).
@@ -1198,8 +1197,13 @@ names in the language picker, which stay `English` and `中文` so you can find 
 already-rendered English string. New records store it as data (`metaData`) and re-render it in the current language;
 records that only have the old string show it as it was saved, untranslated.
 
+**The standalone API Monitor page** (`/api-monitor`, `monitor.html` + `monitor.js`) uses the same dictionary: it loads
+`i18n.js` before `monitor.js`, its markup carries the same `data-i18n*` attributes, and its strings are the `mt.*`
+group. Its header has the same language button, and it reads and writes the same saved `strata.lang`, so the two pages
+never disagree. The request states it shows (`loading`, `generating`, `queued`, `completed`, `error`, `disconnected`)
+go through a map, and a state this build does not know shows what the server sent.
+
 ---
->>>>>>> Stashed changes
 
 ## Tools from MCP servers
 

@@ -2644,10 +2644,14 @@ class WebApp(unittest.TestCase):
         self.assertEqual(sorted(set(en)), sorted(en), "duplicate key in the en block")
         self.assertEqual(set(en), set(zh), "the en and zh dictionaries must hold the same keys")
         # every key the front end asks for must exist, or the user sees a bare key name
-        want = set(re.findall(r'"([a-z][a-z0-9]*(?:\.[a-z0-9_]+)+)"', (ROOT / "serve" / "web" / "app.js").read_text(encoding="utf-8")))
-        want |= set(re.findall(r'data-i18n(?:-[a-z]+)?="([a-z0-9_.]+)"', (ROOT / "serve" / "web" / "index.html").read_text(encoding="utf-8")))
+        web = ROOT / "serve" / "web"
+        want = set(re.findall(r'"([a-z][a-z0-9]*(?:\.[a-z0-9_]+)+)"', (web / "app.js").read_text(encoding="utf-8")))
+        want |= set(re.findall(r'data-i18n(?:-[a-z]+)?="([a-z0-9_.]+)"', (web / "index.html").read_text(encoding="utf-8")))
+        # the standalone API Monitor page: same dictionary, same rule (serve/web/monitor.html + monitor.js)
+        want |= set(re.findall(r'\bt\("([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"', (web / "monitor.js").read_text(encoding="utf-8")))
+        want |= set(re.findall(r'data-i18n(?:-[a-z]+)?="([a-z0-9_.]+)"', (web / "monitor.html").read_text(encoding="utf-8")))
         want |= set(re.findall(r'\bt\("([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"', src))
-        want -= {"strata.theme", "strata.lang", "details.think", "meta.tools"}   # storage keys, a selector, tn()'s stem
+        want -= {"strata.theme", "strata.lang", "strata.monitor.key", "details.think", "meta.tools"}   # storage keys, a selector, tn()'s stem
         self.assertEqual(set(), want - set(en), "keys used but not in the dictionary")
 
     def test_only_the_app_files_are_served(self):
