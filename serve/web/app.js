@@ -241,14 +241,6 @@ function renderConvCache(c) {
     : "The engine keeps the last conversation's state, so a follow-up reads only what is new. To keep several conversations (agents taking turns), add \"--conversation-cache-mib\", \"8192\" to the run config's args (docs/DETAILS.md).";
 }
 
-function renderTotals(t) {
-  if (!t || !t.requests) return "";
-  const since = new Date(t.since * 1000).toLocaleString([], {weekday: "short", hour: "2-digit", minute: "2-digit"});
-  const read = t.prompt_tokens - t.reused;
-  const pSpeed = t.prompt_ms > 0 && read > 0 ? ` at ${fmt(read / (t.prompt_ms / 1000))} tok/s` : "";
-  const oSpeed = t.decode_ms > 0 && t.output_tokens > 0 ? ` at ${fmt(t.output_tokens / (t.decode_ms / 1000), 1)} tok/s` : "";
-  return `Since ${since}: ${fmt(t.requests)} requests · ${fmt(read)} prompt tokens read${pSpeed} (${fmt(t.reused)} reused) · ` +
-         `${fmt(t.output_tokens)} written${oSpeed}`;
 function renderTotals(tot) {
   if (!tot || !tot.requests) return "";
   const since = new Date(tot.since * 1000).toLocaleString(LOCALE, {weekday: "short", hour: "2-digit", minute: "2-digit"});
@@ -312,7 +304,7 @@ function renderMonitor(live, hw, st, eng, h, last, requests, totals, kept) {
   const per = (f) => (hw.gpus || []).map((g) => t("metric.gpu.per", {i: g.index, v: f(g)})).join(" · ");
   const multi = (hw.gpus || []).length > 1;
   setMetric("gpu", hw.gpu_util == null ? null : fmt(hw.gpu_util), "%",
-            multi ? per((g) => (g.util == null ? "–" : `${fmt(g.util)}%`)) : st.gpu_name || (st.gpu_note ? "not available" : ""));
+            multi ? per((g) => (g.util == null ? "–" : `${fmt(g.util)}%`)) : st.gpu_name || (st.gpu_note ? t("metric.gpu.unavailable") : ""));
   spark("sp-gpu", h.gpu_util, 100);
   setMetric("vram", hw.gpu_mem_used == null ? null : gb(hw.gpu_mem_used), hw.gpu_mem_total ? `/ ${gb(hw.gpu_mem_total, 0)} GB` : "GB",
             multi ? per((g) => (g.mem_used == null ? "–" : `${gb(g.mem_used)} GB`))
@@ -414,7 +406,7 @@ function renderAbout(eng, hw, st) {
     [t("about.f.esp"), projectionText(eng.cvec)],
   ]);
   facts($("facts-hw"), [
-    [t("about.f.gpu"), st.gpu_name ? `${st.gpu_name}${hw.gpu_mem_total ? ", " + t("about.v.gb", {n: gb(hw.gpu_mem_total, 0)}) : ""}` : t("about.v.gpu.none")],
+    [t("about.f.gpu"), st.gpu_name ? `${st.gpu_name}${hw.gpu_mem_total ? ", " + t("about.v.gb", {n: gb(hw.gpu_mem_total, 0)}) : ""}` : (st.gpu_note || t("about.v.gpu.none"))],
     [t("about.f.cpu"), st.cpu_name ? (st.threads ? t("about.v.cpu", {name: st.cpu_name, n: st.threads}) : st.cpu_name) : null],
     [t("about.f.ram"), hw.ram_total ? t("about.v.gb", {n: gb(hw.ram_total, 0)}) : null],
   ]);
