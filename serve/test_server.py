@@ -10,6 +10,7 @@ import json
 import os
 import shutil
 import socket
+import re
 import sys
 import tempfile
 import threading
@@ -2622,12 +2623,32 @@ class WebApp(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertIn("text/html", ctype)
         self.assertIn(b"\"web/app.js\"", body)   # relative since #82 (works behind a path-prefixed proxy)
-        for path, want in (("/web/app.js", "javascript"), ("/web/app.css", "text/css"), ("/web/tokens.css", "text/css"),
-                           ("/web/components.css", "text/css"), ("/web/sprite.svg", "image/svg+xml")):
+        self.assertIn(b"\"web/i18n.js\"", body)  # before app.js, so the first paint is already in the right language
+        for path, want in (("/web/app.js", "javascript"), ("/web/i18n.js", "javascript"), ("/web/app.css", "text/css"),
+                           ("/web/tokens.css", "text/css"), ("/web/components.css", "text/css"), ("/web/sprite.svg", "image/svg+xml")):
             with self.subTest(path=path):
                 code, ctype, _ = self.get(path)
                 self.assertEqual(code, 200)
                 self.assertIn(want, ctype)
+
+    def test_i18n_dictionary_is_complete(self):
+        """The two language blocks of web/i18n.js must hold the same keys (design D9).
+
+        The file's own header states the convention this parses: one entry per line, the key in double quotes,
+        the blocks marked `--- en ---` / `--- zh ---` / `--- end ---`."""
+        src = (ROOT / "serve" / "web" / "i18n.js").read_text(encoding="utf-8")
+        key = re.compile(r'^\s*"([a-z0-9_.]+)":', re.M)
+        en = key.findall(src.split("// --- en ---")[1].split("// --- zh ---")[0])
+        zh = key.findall(src.split("// --- zh ---")[1].split("// --- end ---")[0])
+        self.assertGreaterEqual(len(en), 180, "the en block looks empty or mis-marked")
+        self.assertEqual(sorted(set(en)), sorted(en), "duplicate key in the en block")
+        self.assertEqual(set(en), set(zh), "the en and zh dictionaries must hold the same keys")
+        # every key the front end asks for must exist, or the user sees a bare key name
+        want = set(re.findall(r'"([a-z][a-z0-9]*(?:\.[a-z0-9_]+)+)"', (ROOT / "serve" / "web" / "app.js").read_text(encoding="utf-8")))
+        want |= set(re.findall(r'data-i18n(?:-[a-z]+)?="([a-z0-9_.]+)"', (ROOT / "serve" / "web" / "index.html").read_text(encoding="utf-8")))
+        want |= set(re.findall(r'\bt\("([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"', src))
+        want -= {"strata.theme", "strata.lang", "details.think", "meta.tools"}   # storage keys, a selector, tn()'s stem
+        self.assertEqual(set(), want - set(en), "keys used but not in the dictionary")
 
     def test_only_the_app_files_are_served(self):
         for path in ("/web/..%2Fserver.py", "/web/index.html", "/web/test.py", "/fonts/..%2F..%2Fsetup.py",

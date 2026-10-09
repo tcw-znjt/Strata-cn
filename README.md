@@ -142,25 +142,38 @@ Sizes, downloads and what fits where: [docs/MODELS.md](docs/MODELS.md). To add a
 <p align="center"><img src="docs/media/runpagoda.png" width="900" alt="The Strata app's Monitor tab next to a coding agent"><br>
 <sub>The Strata app's <b>Monitor</b> (left) while a coding agent writes the pagoda garden from the video (right)</sub></p>
 
-- **In the browser:** open `http://127.0.0.1:8080`. It has **Chat**, a live **Monitor** of the model and your
-  GPU/CPU/RAM, and **About** with the settings and addresses.
-- **Your apps and coding agents:** add an "OpenAI-compatible" provider with the base URL
-  **`http://127.0.0.1:8080/v1`**. Any API key and any model name work.
-  - Apps that use Anthropic's API: `http://127.0.0.1:8080/v1/messages` (Claude Code:
-    `ANTHROPIC_BASE_URL=http://127.0.0.1:8080`).
-  - Codex CLI and other apps that use the OpenAI Responses API: `/v1/responses`
-    ([setup](docs/DETAILS.md#the-responses-api-and-codex-cli)).
-- **Thinking:** choose **off, low, medium or high** in the chat menu or in your app's "reasoning effort". Off is the
-  fastest. High is best for hard questions.
-- **Pictures:** say yes to "Images?" in setup. Then click **Picture** in the chat, or attach pictures in your app.
-  AMD cards read pictures on Linux through the processor; on Windows they can't yet.
-- **From your phone or another PC:** `START-HERE.bat --setup --host 0.0.0.0 --api-key <secret>`. Always set a key.
-- **One request at a time:** by default Strata answers one request, and the others wait. To answer several at once,
-  set `"parallel": 2` ([BATCHING.md](docs/BATCHING.md)). On a 12 GB card this makes each answer slower.
-- **Long prompts:** Strata reads the first message of a chat in full, about 1 minute per 30,000 tokens. Follow-up
-  messages start in seconds.
+- **In the browser:** `http://127.0.0.1:8080` - the Strata app (it opens by itself when the model starts): **Chat**, a
+  live **Monitor** of the model and your GPU/CPU/RAM, and **About** with the settings and addresses. It speaks English
+  or 中文: the first opening follows your browser's language, and the language button in the header (or
+  **About > Settings > Language**) switches everything at once and remembers your choice for the next visit.
+  `http://127.0.0.1:8080/?lang=zh` previews the other language without saving it.
+- **Chat in the terminal:** `.venv\Scripts\python chat.py`
+- **Your apps and coding agents:** add it as an "OpenAI-compatible" provider with base URL
+  **`http://127.0.0.1:8080/v1`**, any API key and any model name. Apps that use Anthropic's API: `http://127.0.0.1:8080/v1/messages`.
+- **Thinking:** the model thinks before it answers. Choose **off, low, medium or high** - in the chat page menu, with
+  `/think low` in `chat.py`, or with your app's "reasoning effort" setting. Off is fastest; high is best for hard questions.
+- **Pictures:** in the chat page click **Picture**; in `chat.py` type `/image <path>`; in apps just attach them.
+- **From your phone or another PC:** `START-HERE.bat --setup --host 0.0.0.0 --api-key <secret>`, then open the
+  address the server window prints; see the [details](docs/DETAILS.md#using-it).
+- **Experimental speed projection (off by default):** an experimental control vector that setup can turn on; it
+  changes how the model answers - read [what it does](docs/DETAILS.md#experimental-speed-projection-experimental-off-by-default) first.
 
-More: [where your chats are stored](docs/INSTALL.md#where-things-are-stored), [the API](docs/DETAILS.md#using-it).
+**Good to know:** it answers one request at a time. The first message of a chat is read in full (about 1 minute per
+30,000 tokens); after that it keeps the conversation and reads only what is new, so follow-ups start in seconds.
+
+### Where things are stored
+
+- **Your chats: only in your browser.** The Chat tab keeps the conversation, its settings, the language you picked
+  (`strata.lang`) and the API key you typed in the browser's local storage (`strata.*` keys) - not on the server and
+  not in the Strata folder. Pictures are not
+  kept, only their names. Another browser or a private window starts empty; clearing the site's data deletes them.
+- **How the model starts:** `strata-<model>.json` in the Strata folder (context, GPUs, host, API key, ...), written
+  by setup; next to it `run-<model>.bat` / `.sh`, the log `strata-<model>.log` and, when you use "Use for other
+  apps too", `strata-<model>.shared-settings.json`.
+- **The model files** (`models/`, `packs/`, `mtp/`, 70-120 GB): in **`Strata-data` next to the Strata folder**, or
+  wherever `--data-dir` put them.
+- **Where that data folder is:** `%APPDATA%\Strata\settings.json` on Windows, `~/.config/strata/settings.json` on
+  Linux ([details](docs/DETAILS.md)).
 
 ## Something went wrong?
 

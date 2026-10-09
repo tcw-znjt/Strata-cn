@@ -8,6 +8,8 @@ New here? Start with the [README](../README.md); installing step by step is in [
 > [Requirements](#before-you-start) · [Windows](#windows) · [Linux](#linux) · [API](#using-it) ·
 > [MCP tools](#tools-from-mcp-servers) · [MCP server](#manage-strata-from-your-ai-assistant-mcp-server) ·
 > [Images](#images-vision) ·
+> [Requirements](#before-you-start) · [Windows](#windows) · [Linux](#linux) · [API](#using-it) · [Languages](#the-web-apps-languages) ·
+> [MCP tools](#tools-from-mcp-servers) · [Images](#images-vision) ·
 > [Troubleshooting](#troubleshooting) · [How it works](#how-it-works)
 
 ---
@@ -1081,6 +1083,7 @@ without penalties, so more of its guesses are now rejected. Requests without pen
 
 ---
 
+<<<<<<< Updated upstream
 ### The Responses API and Codex CLI
 
 `POST /v1/responses` (0.1.39, #451) speaks OpenAI's newer Responses API, which Codex CLI uses (it no longer
@@ -1155,6 +1158,48 @@ one that would not fit the context with the kept tools. Off by default: the prom
 one the client sent. The author measured, with Codex CLI 0.160.0 and an engine that only counts the shared prompt start,
 that a compaction after an 85,000-token conversation reused 84,895 of its 84,997 tokens and read 102; without it, 41 of
 80,683.
+=======
+## The web app's languages
+
+The page ships both languages in one file, `serve/web/i18n.js`, loaded before `app.js` from the same origin: no fetch,
+no build step, no CDN, and the first paint is already in the right language.
+
+**Which language you get.** `?lang=zh` / `?lang=en` for this one opening (not saved), else the saved `strata.lang` in
+the browser's local storage, else the browser's own language (`navigator.language` starting with `zh` means Chinese).
+The header's language button and **About > Settings > Language** switch everything at once - the static skeleton
+through the `data-i18n*` attributes, and everything `app.js` renders through `window.strataRedraw()` - and save the
+choice. Numbers, dates and weekday names follow the same switch (`LOCALE`).
+
+**Dictionary conventions** - `serve/test_server.py::WebApp.test_i18n_dictionary_is_complete` parses the file by them,
+so keep them:
+
+- one entry per line, the key in double quotes: `"some.key": "text",`
+- the two blocks sit between the comment markers `--- en ---`, `--- zh ---` and `--- end ---`
+- both blocks hold exactly the same set of keys (the test asserts it, and asserts a floor on the count so a
+  mis-marked block cannot pass as empty)
+- keys are lowercase letters, digits, `.` and `_`, grouped by area (`tab.*`, `pill.*`, `mon.*`, `req.*`, `about.*`,
+  `drawer.*`, `chat.*`, `tool.*`, `meta.*`, `toast.*`, `mcp.*`, `export.*`)
+
+Sentences are whole templates with `{placeholders}`, never fragments joined in JavaScript - Chinese word order differs,
+and fragment-by-fragment translation produces broken sentences. Plurals are a `_one` / `_other` pair (`tn("meta.tools", 2)`).
+`index.html` keeps its English text as the element's default content, so a missing entry falls back structurally rather
+than leaving a blank.
+
+**How `t()` falls back.** The current language, then English, then the key itself plus a `console.warn` - so a missing
+entry shows English to the user and is obvious in the console, and the UI never breaks.
+
+**What is deliberately not translated.** The model's answers, reasoning and tool arguments/results; MCP server, tool
+and model names, their descriptions and versions; hardware names and engine versions; error text that comes from the
+server (`missing or wrong API key`, `HTTP 401`); the `File: <name>` line the chat page wraps around an attached file,
+which is part of what the model reads; units and separators (`t/s`, `GB`, `°C`, `W`, `Gen4`, `x16`, `·`); and the two
+names in the language picker, which stay `English` and `中文` so you can find yours in either language.
+
+**Old chat records.** Before this, each answer's grey line (`123 tokens · 45.6 tok/s · stopped`) was stored as an
+already-rendered English string. New records store it as data (`metaData`) and re-render it in the current language;
+records that only have the old string show it as it was saved, untranslated.
+
+---
+>>>>>>> Stashed changes
 
 ## Tools from MCP servers
 
